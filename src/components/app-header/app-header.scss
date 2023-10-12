@@ -1,16 +1,16 @@
 @import '../../style/variables.scss';
 
-header {
+header  {
+    .app__title {
+        color: $main-color;
+    }
+    span {
+        color: $dark;
+    }
     .app-header {
         display: flex;
         align-items: center;
         gap: 7px;
-        h1 {
-            color: $main-color;
-        }
-        span {
-            color: $dark;
-        }
     }
     nav {
         display: flex;

@@ -1,209 +1,121 @@
-import { Component } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../error-message/error-message';
-import MarvelService from '../../services/marvel-service';
+import useMarvelService from '../../services/marvel-service';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
 import './char-list.scss';
 
-class CharList extends Component {
-    
-    state = {
-        chars: [],
-        loading: true,
-        error: false,
-        newItemsLoading: false,
-        offset: 9,
-        charEnded : false,
-        hasScrolled: false,
+
+const CharList = (props) => {
+
+    const [charList, setCharList] = useState([]);
+    const [newItemLoading, setNewItemLoading] = useState(false);
+    const [offset, setOffset] = useState(210);
+    const [charEnded, setCharEnded] = useState(false);
+    const [firstLoad, setFirstLoad] = useState(true)
+
+    const {loading, error, getAllCharacters} = useMarvelService();
+
+    useEffect(() => {
+        setFirstLoad(true)
+        onRequest(offset, true);
+    }, [])
+
+    const onRequest = (offset, initial) => {
+        initial ? setNewItemLoading(false) : setNewItemLoading(true);
+        getAllCharacters(offset)
+            .then(onCharListLoaded)
     }
 
-    itemRefs = [];
-
-    setCharRef = elem => {
-        this.charRef = elem
-        this.itemRefs.push(elem)
-    }
-
-    focusChar = (id) => {
-        this.itemRefs.forEach(item => item.classList.remove('char__item_selected'));
-        this.itemRefs[id].classList.add('char__item_selected');
-    }
-
- /*    componentDidUpdate(prevProps) {
-        //Проверяем поменялся ли у нас стейт альтернатива рефам тут, для этого нужен стейт
-        Айди передается в качестве пропсов
-        if (this.props.selectedChar !== prevProps.selectedChar) {
-            this.setState({
-                selectedCharId: this.props.selectedChar
-            }, () => {
-                // Вызовите focusChar после обновления состояния
-                this.focusChar();
-            });
-        }
-    } */
-
-    marvelService = new MarvelService();
-
-    onScrollRequest = () => {
-        if (!this.state.hasScrolled && window.scrollY >= (document.body.scrollHeight - window.innerHeight)) {
-            this.onRequest(this.state.offset);
-            this.setState({ hasScrolled: true });
-        }
-    }
-
-    componentDidMount() {
-        this.onRequest()
-        window.addEventListener('scroll', this.onScrollRequest)
-
-        this.setState({
-            selectedCharId: this.props.selectedChar
-        });
-    }
-
-    componentWillUnmount() {
-        window.removeEventListener('scroll', this.onScrollRequest)
-    }
-
-    onRequest = (offset) => {
-        this.onCharListLoading()
-        this.marvelService
-            .getAllCharacters(offset)
-            //Неявно передаем аргумент response который получили в зене
-            .then(this.onCharListLoaded)
-            .catch(this.onError)
-
-    }
-
-    onCharListLoading = () => {
-        this.setState({
-            newItemsLoading: true
-        })
-    }
-
-    onCharListLoaded = async (newChars) => {
+    const onCharListLoaded = (newCharList) => {
+        setFirstLoad(false)
         let ended = false;
-        if (newChars.length < 9 || newChars[0].total <= this.state.offset || newChars[0].total <= 1553) {
-          ended = true;
+        if (newCharList.length < 9) {
+            ended = true;
         }
-      
-        try {
-          const total = await this.marvelService.getTotal();
-          this.setState((prevState) => ({
-            chars: [...prevState.chars, ...newChars],
-            loading: false,
-            newItemsLoading: false,
-            offset: prevState.offset + 9,
-            charEnded: ended,
-            hasScrolled: false,
-            total,
-          }));
-        } catch (error) {
-          console.error("Error fetching total:", error);
-        }
-      };
-      
 
-
-    onError = () => {
-        this.setState({
-            loading: false,
-            error: true,
-            hasScrolled: false
-        })
+        setCharList(charList => [...charList, ...newCharList]);
+        setNewItemLoading(newItemLoading => false);
+        setOffset(offset => offset + 9);
+        setCharEnded(charEnded => ended);
     }
 
-    
+    const itemRefs = useRef([]);
 
-    render() {
-        // window.innerHeight - высота экрана
-        // window.scrollY - сколько пикселей проскролено от верха
-        // document.body.scrollHeight - общая высота
+    const focusOnItem = (id) => {
+        itemRefs.current.forEach(item => item.classList.remove('char__item_selected'));
+        itemRefs.current[id].classList.add('char__item_selected');
+    }
 
-       
-        const {chars, loading, error, charEnded} = this.state;
-        const isError = error ? <ErrorMessage/> : null;
-        const isLoading = loading ? <Spinner/> : null;
-        const renderChars = !(error || loading) ? <RenderList 
-                                                        chars={chars} 
-                                                        onCharSelected={this.props.onCharSelected}
-                                                        setCharRef={this.setCharRef}
-                                                        focusChar={this.focusChar}
-                                                        selectedCharId={this.state.selectedCharId}
-                                                        itemRefs={this.itemRefs}/>
-                                                 : null
-
-        const listStyles = 
-            isLoading ? 
-            {
-                "gridTemplateColumns" : "1fr",
-                "justifyContent": "center", 
-                "alignItems": "center"
+    // Этот метод создан для оптимизации, 
+    // чтобы не помещать такую конструкцию в метод render
+    function renderItems(arr) {
+        const items =  arr.map((item, i) => {
+            let imgStyle = {'objectFit' : 'cover'};
+            if (item.thumbnail === 'http://i.annihil.us/u/prod/marvel/i/mg/b/40/image_not_available.jpg') {
+                imgStyle = {'objectFit' : 'unset'};
             }
             
-            : null
-
-        const isButtonShown =
-            isLoading || charEnded ?
-            {
-                "display" : "none"
-            }
-
-            : null
-
+            return (
+                <CSSTransition
+                    key={item.id}
+                    timeout={500} 
+                    classNames="char-item">
+                    <li 
+                        className="char__item"
+                        tabIndex={0}
+                        ref={el => itemRefs.current[i] = el}
+                        key={item.id}
+                        onClick={() => {
+                            props.onCharSelected(item.id);
+                            focusOnItem(i);
+                        }}
+                        onKeyPress={(e) => {
+                            if (e.key === ' ' || e.key === "Enter") {
+                                props.onCharSelected(item.id);
+                                focusOnItem(i);
+                            }
+                        }}>
+                            <img src={item.thumbnail} alt={item.name} style={imgStyle}/>
+                            <div className="char__name">{item.name}</div>
+                    </li>
+                </CSSTransition>
+            )
+        });
+        // А эта конструкция вынесена для центровки спиннера/ошибки
         return (
-            <div className="char__list">
-                <ul className="char__grid" style={listStyles}>
-                    {isError}
-                    {isLoading}
-                    {renderChars}
-                </ul>
-                <button 
-                    className="button button__main button__long"
-                    style={isButtonShown}
-                    disabled={this.state.newItemsLoading}
-                    onClick={() => this.onRequest(this.state.offset)}>
-                    <div className="inner">Load more</div>
-                </button>
-            </div>
+        <ul className="char__grid">
+            <TransitionGroup className="char__grid">
+                {items}
+            </TransitionGroup>
+        </ul>
         )
     }
+    
+    const items = renderItems(charList);
+
+    const errorMessage = error ? <ErrorMessage/> : null;
+    const spinner = loading && !newItemLoading ? <Spinner/> : null;
+
+    return (
+        <div className="char__list">
+            {errorMessage}
+            {spinner}
+            {items}
+            <button 
+                className="button button__main button__long"
+                disabled={newItemLoading}
+                style={{'display': charEnded || firstLoad ? 'none' : 'block'}}
+                onClick={() => onRequest(offset)}>
+                <div className="inner">load more</div>
+            </button>
+        </div>
+    )
 }
-
-
-
-const RenderList = ({chars, onCharSelected, setCharRef, focusChar}) => {
-    return chars.map((el, i) => {
-
-        let isContain;
-
-        if (el.thumbnail.includes('image_not_available')) {
-            isContain = 'contain'
-        }
-
-        return(
-            <li className={'char__item'}
-                ref={setCharRef}
-                key={el.id}
-                onClick={() => {
-                    onCharSelected(el.id);
-                    focusChar(i)
-                    }}>
-                <img src={el.thumbnail} 
-                alt={el.name}
-                style={
-                {objectFit: isContain}
-                }/>
-                <div className="char__name">{el.name.substring(0, 27) + '...'}</div>
-            </li>
-        )
-    })
-
-}
-
 
 CharList.propTypes = {
     onCharSelected: PropTypes.func.isRequired
 }
-
 
 export default CharList;

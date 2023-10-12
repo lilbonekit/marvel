@@ -1,60 +1,32 @@
-import { Component } from 'react';
+import { useEffect, useState } from 'react';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../error-message/error-message';
-import MarvelService from '../../services/marvel-service';
+import useMarvelService from '../../services/marvel-service';
 import './random-char.scss';
 
 import mjolnir from '../../resources/img/mjolnir.png';
 
-class RandomChar extends Component {
+const RandomChar = () => {
 
-    state = {
-        char: {},
-        loading: true,
-        error: false
-    }
-
-    onCharLoading = () => {
-        this.setState({
-            loading: true
-        })
-    }
-
+    const [char, setChar] = useState({});
+    const {loading, error, getCharacter, clearError} = useMarvelService();
 
     //Эта функция просто записывает в стейт, а запуск ее в updateChar
-    onCharLoaded = (char) => {
-        this.setState({
-            char,
-            loading: false,
-            error: false
-        })
+    const onCharLoaded = (char) => {
+        setChar(char);
     }
 
+    useEffect(() => {
+        updateChar()
+    }, [])
 
-    onError = () => {
-        this.setState({
-            loading: false,
-            error: true
-        })
-    }
-
-    componentDidMount() {
-        this.updateChar();
-    }
-
-    marvelService = new MarvelService();
-
-    updateChar = () => {
+    const updateChar = () => {
+        clearError();
         const id = Math.floor(Math.random() * (1011400 - 1011000) + 1011000)
-        this.onCharLoading()
-        this.marvelService
-            .getCharacter(id)
-            .then(this.onCharLoaded)
-            .catch(this.onError)
+        getCharacter(id)
+            .then(onCharLoaded)
     }
 
-    render() {
-        const {char, loading, error} = this.state;
         const isError = error ? <ErrorMessage/> : null;
         const isLoading = loading ? <Spinner/> : null;
         const renderChar = !(error || loading) ? <View char={char}/> : null
@@ -73,7 +45,7 @@ class RandomChar extends Component {
                         Or choose another one
                     </p>
                     <button
-                        onClick={this.updateChar} 
+                        onClick={updateChar} 
                         className="button button__main">
                         <div className="inner">try it</div>
                     </button>
@@ -81,7 +53,6 @@ class RandomChar extends Component {
                 </div>
             </div>
         )
-    }
 }
 
 const View = ({char}) => {
@@ -92,7 +63,7 @@ const View = ({char}) => {
             <img src={thumbnail} 
                  alt="Random character"
                  className="randomchar__img"
-                 style={{objectFit : thumbnail.includes('image_not_available') ? 'contain' : 'cover'}}/>
+                 style={{objectFit : thumbnail && thumbnail.includes('image_not_available') ? 'unset' : 'cover'}}/>
             <div className="randomchar__info">
                 <p className="randomchar__name">{name}</p>
                 <p className="randomchar__descr">

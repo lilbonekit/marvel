@@ -1,15 +1,23 @@
 import './app-header.scss';
+import { Link, NavLink } from 'react-router-dom';
 
 const AppHeader = () => {
+
+    const currentStyleLink = ({isActive}) => 
+        isActive ? 
+        'app-header__link app-header__link-active' :
+        'app-header__link'
+
     return(
-        <header>
-            <a href="#" className="app-header">
-                <h1>Marvel <span>information portal</span></h1>
-            </a>
+        <header className="app-header">
+            <Link to="/">
+                <h1 className="app__title">Marvel <span>information portal</span></h1>
+            </Link>
             <nav>
-                <a href="#" className="app-header__link app-header__link-active">Characters</a>
+                <NavLink end to="/" 
+                className={currentStyleLink}>Characters</NavLink>
                 /
-                <a href="#" className="app-header__link">Comics</a>
+                <NavLink className={currentStyleLink} to="/comics">Comics</NavLink>
             </nav>
         </header>
     )
