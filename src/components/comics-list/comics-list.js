@@ -19,9 +19,9 @@ const ComicsList = () => {
     }, [])
 
     const onRequest = (offset) => {
-        console.log('запрос')
         getAllComics(offset)
             .then(onComicsListLoaded)
+            .catch(error)
     }
 
     const onComicsListLoaded = (newArray) => {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Spinner from '../spinner/Spinner';
 import ErrorMessage from '../error-message/error-message';
 import useMarvelService from '../../services/marvel-service';
+import AppBanner from '../app-banner/app-banner';
 
 
 const SingleComicPage = () => {
@@ -15,8 +16,6 @@ const SingleComicPage = () => {
     useEffect(() => {
         updateComic()
     }, [comicId])
-
-
 
     const updateComic = () => {
         clearError()
@@ -34,6 +33,7 @@ const SingleComicPage = () => {
 
     return (
         <>
+            <AppBanner/>
             {errorMessage}
             {spinner}
             {content}
