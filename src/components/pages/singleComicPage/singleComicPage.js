@@ -1,10 +1,11 @@
+import { Helmet } from "react-helmet";
 import './single-comic-page.scss';
 import { Link, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import Spinner from '../spinner/Spinner';
-import ErrorMessage from '../error-message/error-message';
-import useMarvelService from '../../services/marvel-service';
-import AppBanner from '../app-banner/app-banner';
+import Spinner from '../../spinner/Spinner';
+import ErrorMessage from '../../error-message/error-message';
+import useMarvelService from '../../../services/marvel-service';
+import AppBanner from '../../app-banner/app-banner';
 
 
 const SingleComicPage = () => {
@@ -46,6 +47,12 @@ const View = ({comic}) => {
 
     return (
         <div className="single-comic">
+             <Helmet>    
+                <meta
+                    name="description"
+                    content={`${title} books`}/>
+                <title>{title}</title>
+            </Helmet>
             <img src={thumbnail} alt={title} className="single-comic__img"/>
             <div className="single-comic__info">
                 <h2 className="single-comic__name">{title}</h2>

@@ -1,4 +1,4 @@
-import './form.scss'
+import './char-search-form.scss'
 import { Formik, Form, Field, ErrorMessage } from 'formik'
 import * as Yup from 'yup'
 
@@ -6,13 +6,14 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import useMarvelService from '../../services/marvel-service'
-import Spinner from '../../components/spinner/Spinner'
+import Spinner from '../spinner/Spinner'
 
 const SearchCharForm = () => {
 
+    const [result, setResult] = useState(null)
+
     const {loading, getFoundedCharacter} = useMarvelService();
 
-    const [result, setResult] = useState(null)
     const [foundedMessage, setFoundedMessage] = useState(null)
     const [notFoundedMessage, setNotFoundedMessage] = useState(false)
 

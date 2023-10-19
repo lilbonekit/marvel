@@ -1,10 +1,11 @@
-import './single-comic-page.scss';
+import { Helmet } from "react-helmet";
+import '../singleComicPage/single-comic-page.scss';
 import { Link, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import Spinner from '../spinner/Spinner';
-import ErrorMessage from '../error-message/error-message';
-import useMarvelService from '../../services/marvel-service';
-import AppBanner from '../app-banner/app-banner';
+import Spinner from '../../spinner/Spinner';
+import ErrorMessage from '../../error-message/error-message';
+import useMarvelService from '../../../services/marvel-service';
+import AppBanner from '../../app-banner/app-banner';
 
 const SingleCharacterPage = () => {
 
@@ -44,14 +45,23 @@ const View = ({character}) => {
     const {name, description, thumbnail} = character;
 
     return (
-        <div className="single-comic">
-            <img src={thumbnail} alt={name} className="single-comic__img" style={{objectFit: "cover"}}/>
-            <div className="single-comic__info">
-                <h2 className="single-comic__name">{name}</h2>
-                <p className="single-comic__descr">{description}</p>
+        <>
+            <Helmet>    
+                <meta
+                    name={name}
+                    content={`${name} info`}/>
+                <title>{name}</title>
+            </Helmet>
+
+            <div className="single-comic">
+                <img src={thumbnail} alt={name} className="single-comic__img" style={{objectFit: "cover"}}/>
+                <div className="single-comic__info">
+                    <h2 className="single-comic__name">{name}</h2>
+                    <p className="single-comic__descr">{description}</p>
+                </div>
+                <Link to="/" className="single-comic__back">Back to main page</Link>
             </div>
-            <Link to="/" className="single-comic__back">Back to main page</Link>
-        </div>
+        </>
     )
 }
 
